@@ -1,6 +1,7 @@
-<script type="module">
-    import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
-</script>
+
+import { pipeline, env } from '@xenova/transformers'
+env.allowLocalModels = false;
+env.useBrowserCache = false;
 import { MessageTypes } from './presets'
 
 class MyTranscriptionPipeline {
@@ -18,14 +19,14 @@ class MyTranscriptionPipeline {
 }
 
 self.addEventListener('message', async (event) => {
-    const {type, audio } = event.data
-    if (type === MessageTypes.INFERENCE_REQUEST){
+    const { type, audio } = event.data
+    if (type === MessageTypes.INFERENCE_REQUEST) {
         await transcribe(audio)
     }
 })
 
 async function transcribe(audio) {
-    sendLoadingMessage('Cargando')
+    sendLoadingMessage('loading')
 
     let pipeline
 
@@ -35,7 +36,7 @@ async function transcribe(audio) {
         console.log(err.message)
     }
 
-    sendLoadingMessage('exito')
+    sendLoadingMessage('success')
 
     const stride_length_s = 5
 
@@ -48,15 +49,14 @@ async function transcribe(audio) {
         return_timestamps: true,
         callback_function: generationTracker.callbackFunction.bind(generationTracker),
         chunk_callback: generationTracker.chunkCallback.bind(generationTracker)
-
     })
     generationTracker.sendFinalResult()
 }
 
 async function load_model_callback(data) {
-    const {status} = data
+    const { status } = data
     if (status === 'progress') {
-        const {file, progress, loaded, total} = data
+        const { file, progress, loaded, total } = data
         sendDownloadingMessage(file, progress, loaded, total)
     }
 }
@@ -79,7 +79,7 @@ async function sendDownloadingMessage(file, progress, loaded, total) {
 }
 
 class GenerationTracker {
-    constructor(pipeline, stride_length_s){
+    constructor(pipeline, stride_length_s) {
         this.pipeline = pipeline
         this.stride_length_s = stride_length_s
         this.chunks = []
@@ -89,7 +89,7 @@ class GenerationTracker {
     }
 
     sendFinalResult() {
-        self.postMessage({type: MessageTypes.INFERENCE_DONE})
+        self.postMessage({ type: MessageTypes.INFERENCE_DONE })
     }
 
     callbackFunction(beams) {
@@ -106,7 +106,7 @@ class GenerationTracker {
         const result = {
             text,
             start: this.getLastChunkTimestamp(),
-            end:undefined
+            end: undefined
         }
 
         createPartialResultMessage(result)
@@ -114,8 +114,8 @@ class GenerationTracker {
 
     chunkCallback(data) {
         this.chunks.push(data)
-        const [text, {chunks}] = this.pipeline.tokenizer._decode_asr(
-            this.chunks, 
+        const [text, { chunks }] = this.pipeline.tokenizer._decode_asr(
+            this.chunks,
             {
                 time_precision: this.time_precision,
                 return_timestamps: true,
@@ -123,9 +123,10 @@ class GenerationTracker {
             }
         )
 
-        this.processed_chunks = chunks.map((chunks, index) => {
-            return this.processed_chunks(chunks, index)
+        this.processed_chunks = chunks.map((chunk, index) => {
+            return this.processChunk(chunk, index)
         })
+
 
         createResultMessage(
             this.processed_chunks, false, this.getLastChunkTimestamp()
@@ -133,7 +134,7 @@ class GenerationTracker {
     }
 
     getLastChunkTimestamp() {
-        if (this.processed_chunks.length === 0){
+        if (this.processed_chunks.length === 0) {
             return 0
         }
     }
@@ -148,7 +149,8 @@ class GenerationTracker {
             start: Math.round(start),
             end: Math.round(end) || Math.round(start + 0.9 * this.stride_length_s)
         }
-    }  
+
+    }
 }
 
 function createResultMessage(results, isDone, completedUntilTimestamp) {
@@ -166,4 +168,3 @@ function createPartialResultMessage(result) {
         result
     })
 }
-

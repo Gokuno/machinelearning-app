@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 
 export default function HomePage(props) {
   const { setAudioStream, setFile } = props
@@ -30,7 +30,7 @@ export default function HomePage(props) {
     setRecordingStatus('grabando')
 
     //Crear nueva instancia de Media recorder usando el stream
-    const media = new MediaRecorder(tempStream, {type: mimeType})
+    const media = new MediaRecorder(tempStream, { type: mimeType })
     mediaRecorder.current = media
 
     mediaRecorder.current.start()
