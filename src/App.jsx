@@ -83,7 +83,7 @@ function App() {
       <section className='min-h-screen flex flex-col'>
         <Header />
         {output ? (
-          <Information output={output} finished={finished}/>
+          <Information output={output} finished={finished} />
         ) : loading ? (
           <Transcribing />
         ) : isAudioAvailable ? (
