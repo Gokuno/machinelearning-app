@@ -5,6 +5,9 @@ import Translation from './Translation'
 export default function Information(props) {
   const { output } = props
   const [tab, setTab] = useState('transcription')
+  const [translation, setTranslation] = useState(null)
+  const [toLanguage, setToLanguage] = useState('Select language')
+  const [translating, setTranslating] = useState(null)
   console.log(output)
 
   function handleCopy() {
@@ -19,6 +22,13 @@ export default function Information(props) {
     document.body.appendChild(element)
     element.click()
   }
+
+  function generateTranslation() {
+
+  }
+  
+  const textElement = tab === 'transcription' ? output.map(val => val.text
+  ) : ''
 
 
   return (
@@ -36,9 +46,9 @@ export default function Information(props) {
       </div>
       <div className='my-8 flex flex-col'>
       {tab === 'transcription' ? (
-          <Transcription {...props} />
+          <Transcription {...props} textElement={textElement} />
       ) : (
-          <Translation {...props} />
+          <Translation {...props} toLanguage={toLanguage} translating={translating} textElement={textElement} setTranslating={setTranslating} setTranslation={setTranslation} setToLanguage={setToLanguage} />
       )}
       </div>
       <div className='flex items=center gap-4 mx-auto'>
